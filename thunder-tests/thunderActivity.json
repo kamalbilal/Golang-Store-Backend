@@ -1,0 +1,21 @@
+[
+  {
+    "_id": "07251017-41f3-441d-9a1a-64d042330630",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/getProductData",
+    "url": "localhost:8080/getProductData",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-07T23:38:01.199Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"id\" : 1657785073086523\n}",
+      "form": []
+    },
+    "tests": []
+  }
+]

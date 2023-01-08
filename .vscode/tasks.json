@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0", 
+    "tasks":[
+        {
+            "label": "Run Go main",
+            "type": "shell",
+            "command": "go run main.go",
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        // {
+        //     "label": "Run Fastify Server",
+        //     "type": "shell",
+        //     "command": "yarn start",
+        //     "problemMatcher": []
+        // },
+    ]
+}
