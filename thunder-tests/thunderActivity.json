@@ -17,5 +17,24 @@
       "form": []
     },
     "tests": []
+  },
+  {
+    "_id": "a4576aaf-947d-4925-a81d-9eb2df39c054",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/getProductData",
+    "url": "http://localhost:8080/signup",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-09T16:15:49.445Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"email\" : \"kamalbilal3@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "form": []
+    },
+    "tests": []
   }
 ]
