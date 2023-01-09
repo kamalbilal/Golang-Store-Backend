@@ -39,3 +39,19 @@ func SetKey(keyName string, value []byte, expireInSec int) bool  {
 	}
 	return true
 }
+func IncreaseExpirationTime(keyName string, expireInSec int) bool {
+	// Get current expiration time of key
+	ttl, err := client.TTL(keyName).Result()
+	if err != nil {
+		return false
+	}
+
+	// Set new expiration time for key
+	expiration := ttl + time.Duration(expireInSec)*time.Second
+	err = client.Expire(keyName, expiration).Err()
+	if err != nil {
+		return false
+	}
+
+	return true
+}

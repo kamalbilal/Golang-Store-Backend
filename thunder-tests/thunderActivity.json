@@ -4,16 +4,16 @@
     "colId": "history",
     "containerId": "",
     "name": "localhost:8080/getProductData",
-    "url": "localhost:8080/getProductData",
+    "url": "http://localhost:8080/getProductData",
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-07T23:38:01.199Z",
+    "modified": "2023-01-09T00:04:23.463Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"id\" : 1657785073086523\n}",
+      "raw": "{\n  \"id\" : 7293620822086523\n}",
       "form": []
     },
     "tests": []
