@@ -384,8 +384,8 @@ func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
 
 func logout(c *gin.Context)  {
 	var cookieName = "token"
-	cookieExist := myCookie.CookieExist(c, &cookieName)
-	if cookieExist.Exists == false {
+	cookie := myCookie.CookieExist(c, &cookieName)
+	if cookie.Exists == false {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "success": false, "code": "cookie not found"})
 		return
 	} else {
