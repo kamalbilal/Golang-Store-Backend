@@ -55,3 +55,13 @@ func IncreaseExpirationTime(keyName string, expireInSec int) bool {
 
 	return true
 }
+
+func GetRemainingExpiryTime(redisKeyName string) int {
+	// Get remaining time-to-live of key
+	ttl, err := client.TTL(redisKeyName).Result()
+	if err != nil {
+		fmt.Println("Error getting ttl of key:", err)
+		return -1 
+	}
+	return int(ttl.Seconds())
+}

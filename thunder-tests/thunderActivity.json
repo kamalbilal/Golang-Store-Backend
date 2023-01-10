@@ -22,17 +22,36 @@
     "_id": "a4576aaf-947d-4925-a81d-9eb2df39c054",
     "colId": "history",
     "containerId": "",
-    "name": "localhost:8080/getProductData",
+    "name": "http://localhost:8080/signup",
     "url": "http://localhost:8080/signup",
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-09T16:15:49.445Z",
+    "modified": "2023-01-10T07:00:30.150Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal3@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilal30@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "8d751a8e-52f5-446a-bd62-a18f543b47b5",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:8080/login",
+    "url": "http://localhost:8080/login",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-10T08:07:34.444Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"email\" : \"kamalbilal30@gmail.com\",\n  \"password\": \"Kamal\"\n}",
       "form": []
     },
     "tests": []

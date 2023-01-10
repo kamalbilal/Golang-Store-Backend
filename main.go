@@ -12,6 +12,7 @@ import (
 	"time"
 
 	db "kamal/database"
+	limiter "kamal/rateLimiter"
 	redis "kamal/redis"
 	myCookie "kamal/setCookie"
 
@@ -70,6 +71,9 @@ func setupRoutes(router *gin.Engine, db *sql.DB) {
 	router.POST("/signup", func(c *gin.Context) {
 		signup(c, db, JWTSECRET)
 	})
+	router.POST("/login", func(c *gin.Context) {
+		login(c, db, JWTSECRET)
+	})
 }
 
 type getProductDataPayload struct {
@@ -104,6 +108,16 @@ type getProductDataDB struct {
 }
 
 func getProductData(c *gin.Context, db *sql.DB)  {
+	// rate limiter
+	ip := c.ClientIP()
+	var currentRoute = "getProductData"
+	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
+	if currentRate >= 50 {
+		c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": true, "code": "To many requests", "waitForSeconds": remainingTime})
+		return
+	}
+	limiter.SetLimit(&ip, &currentRoute, currentRate + 1)
+
 	var productId getProductDataPayload
 	if err := c.ShouldBindJSON(&productId); err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "code": "productId params not found or are of invalid type"})
@@ -119,6 +133,7 @@ func getProductData(c *gin.Context, db *sql.DB)  {
 
 	redisKeyName := "getProductData-" + strconv.Itoa(productId.Id)
 	exist, val := redis.GetKey(redisKeyName)
+	fmt.Println(val)
 	if exist {
 		fmt.Println("From Redis")
 		dec := gob.NewDecoder(bytes.NewReader(val))
@@ -223,6 +238,16 @@ type signupPayload struct {
 }
 
 func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
+	// rate limiter
+	ip := c.ClientIP()
+	var currentRoute = "signup"
+	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
+	if currentRate >= 5 {
+		c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": true, "code": "To many requests", "waitForSeconds": remainingTime})
+		return
+	}
+	limiter.SetLimit(&ip, &currentRoute, currentRate + 1)
+
 	var signup signupPayload
 	if err := c.ShouldBindJSON(&signup); err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "code": "productId params not found or are of invalid type"})
@@ -262,6 +287,7 @@ func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
 			fmt.Println(err.Error())
 		}
 
+		// jwt
 		claims := jwt.MapClaims{"id": id}
 	
 		// Set the expiration time for the JWT.
@@ -274,16 +300,81 @@ func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
 		// Sign and get the complete encoded token as a string.
 		token, err := signer.SignedString(secret)
 		if err != nil {
-			panic(err)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "error": true, "success": false, "reason": "Server error" })
+			return
 		}
 	
 		myCookie.SetCookie(c, token)
 		c.AbortWithStatusJSON(http.StatusCreated, gin.H{  "error": false, "success": true, "email": signup.Email })
 	}
+}
 
+type loginPayload struct {
+	Email string `json:"email"`
+	Password string `json:"password"`
+}
+type loginDB struct {
+	Id int `json:"id"`
+	Email string `json:"email"`
+	HashedPassword string `json:"password"`
+}
 
+func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
+	// rate limiter
+	ip := c.ClientIP()
+	var currentRoute = "login"
+	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
+	if currentRate >= 5 {
+		c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": true, "code": "To many requests", "waitForSeconds": remainingTime})
+		return
+	}
+	limiter.SetLimit(&ip, &currentRoute, currentRate + 1)
 
+	var login loginPayload
+	if err := c.ShouldBindJSON(&login); err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "code": "productId params not found or are of invalid type"})
+		return
+	}
 
-
+	if login.Email == "" || login.Password == "" {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "code": "Required field are empty"})
+		return
+	}
 	
+	var loginDBData loginDB
+	err := db.QueryRow(`SELECT id, email, password from shop.t_users WHERE email = $1;`, login.Email).Scan(&loginDBData.Id, &loginDBData.Email, &loginDBData.HashedPassword)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "error": true, "success": false, "reason": "Credentials Error 1" })
+		return
+	}
+
+	err3 := bcrypt.CompareHashAndPassword([]byte(loginDBData.HashedPassword), []byte(login.Password))
+	if err3 != nil {
+		// password is invalid
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "error": true, "success": false, "reason": "Credentials Error" })
+		return
+	} else {
+		// password is valid
+		// jwt
+		claims := jwt.MapClaims{"id": loginDBData.Id}
+	
+		// Set the expiration time for the JWT.
+		claims["exp"] = time.Now().Add(time.Hour * 240).Unix()
+	
+		// Create a new signer using the specified secret key.
+		signer := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		secret := []byte(JWTSECRET)
+	
+		// Sign and get the complete encoded token as a string.
+		token, err := signer.SignedString(secret)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{ "error": true, "success": false, "reason": "Server error" })
+			return
+		}
+	
+		myCookie.SetCookie(c, token)
+		c.AbortWithStatusJSON(http.StatusCreated, gin.H{  "error": false, "success": true, "email": loginDBData.Email })
+	}
+
 }
