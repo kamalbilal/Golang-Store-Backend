@@ -359,6 +359,7 @@ func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
 		return
 	} else {
 		// password is valid
+		
 		// jwt
 		claims := jwt.MapClaims{"id": loginDBData.Id}
 	
