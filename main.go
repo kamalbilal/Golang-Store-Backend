@@ -383,10 +383,13 @@ func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
 }
 
 func logout(c *gin.Context)  {
-	if cookie, err := c.Cookie("token"); err != nil || cookie == "" {
+	var cookieName = "token"
+	cookieExist := myCookie.CookieExist(c, &cookieName)
+	if cookieExist.Exists == false {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "success": false, "code": "cookie not found"})
 		return
+	} else {
+		myCookie.RemoveCookie(c, &cookieName)
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{"success": true})
 	}
-	c.SetCookie("token", "", -1, "", "", false, true)
-	c.AbortWithStatusJSON(http.StatusOK, gin.H{"success": true})
 }

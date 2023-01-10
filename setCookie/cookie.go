@@ -12,3 +12,20 @@ func SetCookie(c *gin.Context, token string) {
     // Set the cookie with the given options.
     c.SetCookie("token", token, int(expires.Unix()), "/", "", false, true)
 }
+
+func RemoveCookie(c *gin.Context, cookieName *string)  {
+    c.SetCookie(*cookieName, "", -1, "", "", false, true)
+}
+
+type cookieExistStruct struct {
+    Exists bool    `json:"exist"`
+    Value  string `json:"value"`
+}
+func CookieExist(c *gin.Context, cookieName *string) cookieExistStruct {
+    cookie, err := c.Cookie(*cookieName)
+
+    if err != nil || cookie == "" {
+		return cookieExistStruct{Exists: false, Value: ""}
+	}
+    return cookieExistStruct{Exists: true, Value: cookie}
+}
