@@ -74,6 +74,9 @@ func setupRoutes(router *gin.Engine, db *sql.DB) {
 	router.POST("/login", func(c *gin.Context) {
 		login(c, db, JWTSECRET)
 	})
+	router.POST("/logout", func(c *gin.Context) {
+		logout(c)
+	})
 }
 
 type getProductDataPayload struct {
@@ -377,4 +380,13 @@ func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
 		c.AbortWithStatusJSON(http.StatusCreated, gin.H{  "error": false, "success": true, "email": loginDBData.Email })
 	}
 
+}
+
+func logout(c *gin.Context)  {
+	if cookie, err := c.Cookie("token"); err != nil || cookie == "" {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": true, "success": false, "code": "cookie not found"})
+		return
+	}
+	c.SetCookie("token", "", -1, "", "", false, true)
+	c.AbortWithStatusJSON(http.StatusOK, gin.H{"success": true})
 }
