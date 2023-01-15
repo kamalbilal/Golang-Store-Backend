@@ -27,12 +27,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-10T07:00:30.150Z",
+    "modified": "2023-01-14T15:08:33.746Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal30@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilal55@gmail.com\",\n  \"password\": \"Kamal\"\n}",
       "form": []
     },
     "tests": []
@@ -46,12 +46,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-10T09:00:04.082Z",
+    "modified": "2023-01-14T15:35:49.256Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal30@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilal55@gmail.com\",\n  \"password\": \"Kamal\"\n}",
       "form": []
     },
     "tests": []
@@ -73,6 +73,25 @@
       "raw": "{\n  \"email\" : \"kamalbilal30@gmail.com\",\n  \"password\": \"Kamal\"\n}",
       "form": []
     },
+    "tests": []
+  },
+  {
+    "_id": "93a7f495-6345-4403-a9b6-3e83c082d182",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:8080/getwishlist",
+    "url": "http://localhost:8080/getwishlist",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-14T01:57:16.785Z",
+    "modified": "2023-01-14T01:57:16.785Z",
+    "headers": [
+      {
+        "name": "token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjUzNjUsImlkIjo1fQ.4xVyYbXs4h1Yi7SK-RTX4Ibeof32OWgarniSSOM-vik"
+      }
+    ],
+    "params": [],
     "tests": []
   }
 ]

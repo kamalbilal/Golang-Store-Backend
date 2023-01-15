@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,7 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	db "kamal/database"
+	_db "kamal/database"
+	_err "kamal/errors"
 	limiter "kamal/rateLimiter"
 	redis "kamal/redis"
 	myCookie "kamal/setCookie"
@@ -39,17 +41,25 @@ func main() {
 	defer fmt.Printf("\n-----------END-----------\n")
 	redis.CreateClient()
 
-	db, err := db.ConnectToDatabase()
+	db, err := _db.ConnectToDatabase()
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 
+	queries := _db.GetProductDataQuery(db)
+
+	defer queries.GetProductData.Close()
+	defer queries.Login.Close()
+	defer queries.SignUpUser.Close()
+	defer queries.CreateDefaultWishlist.Close()
+	defer queries.EmailAlreadyExist.Close()
+
 	fmt.Println("Successfully connected to the database!")
 	
 	router := gin.Default()
 	
-	setupRoutes(router, db)
+	setupRoutes(router, db, queries)
 	router.Run("localhost:8080")
 
 }
@@ -58,7 +68,7 @@ func main() {
 // 	AllowOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
 // 	AllowCredentials: true,
 // }))
-func setupRoutes(router *gin.Engine, db *sql.DB) {
+func setupRoutes(router *gin.Engine, db *sql.DB, queries *_db.Queries) {
 	COOKIESIGNEDSECRET := loadEnv("COOKIESIGNEDSECRET")
 	JWTSECRET := loadEnv("JWTSECRET")
 	router.Use(cors.Default())
@@ -66,13 +76,16 @@ func setupRoutes(router *gin.Engine, db *sql.DB) {
 	store := cookie.NewStore([]byte(COOKIESIGNEDSECRET))
 	router.Use(sessions.Sessions("mysession", store))
 	router.POST("/getProductData", func(c *gin.Context) {
-		getProductData(c, db)
+		getProductData(c, queries)
+	})
+	router.POST("/getwishlist", func(c *gin.Context) {
+		getWishlist(c, JWTSECRET, queries)
 	})
 	router.POST("/signup", func(c *gin.Context) {
-		signup(c, db, JWTSECRET)
+		signup(c, JWTSECRET, queries)
 	})
 	router.POST("/login", func(c *gin.Context) {
-		login(c, db, JWTSECRET)
+		login(c, JWTSECRET, queries)
 	})
 	router.POST("/logout", func(c *gin.Context) {
 		logout(c)
@@ -110,7 +123,7 @@ type getProductDataDB struct {
 	ModifiedDescriptionContent string `json:"modified_description_content"`
 }
 
-func getProductData(c *gin.Context, db *sql.DB)  {
+func getProductData(c *gin.Context, queries *_db.Queries)  {
 	// rate limiter
 	ip := c.ClientIP()
 	var currentRoute = "getProductData"
@@ -136,7 +149,6 @@ func getProductData(c *gin.Context, db *sql.DB)  {
 
 	redisKeyName := "getProductData-" + strconv.Itoa(productId.Id)
 	exist, val := redis.GetKey(redisKeyName)
-	fmt.Println(val)
 	if exist {
 		fmt.Println("From Redis")
 		dec := gob.NewDecoder(bytes.NewReader(val))
@@ -145,49 +157,13 @@ func getProductData(c *gin.Context, db *sql.DB)  {
 			return
 		}
 		redis.IncreaseExpirationTime(redisKeyName, 20) // increase 20 seconds again
-		c.JSON(http.StatusOK, data)
+		c.AbortWithStatusJSON(http.StatusOK, data)
 		return
 	}
 
 	fmt.Println("From Database")
 
-	err := db.QueryRow(`select 
-	t_basicInfo.display as "_display",
-	t_basicInfo.product_link as "link",
-	t_basicInfo.minprice as "minPrice",
-	t_basicInfo.maxprice as "maxPrice",
-	t_basicInfo.discountnumber as "discountNumber",
-	t_basicInfo.discount as "discount",
-	t_basicInfo.minprice_afterdiscount as "minPrice_AfterDiscount",
-	t_basicInfo.maxprice_afterdiscount as "maxPrice_AfterDiscount",
-	t_basicInfo.multiunitname as "multiUnitName",
-	t_basicInfo.oddunitname as "oddUnitName",
-	t_basicInfo.maxpurchaselimit as "maxPurchaseLimit",
-	t_basicInfo.buylimittext as "buyLimitText",
-	t_basicInfo.quantityavaliable as "quantityAvaliable",
-	t_basicInfo.comingSoon as "comingSoon",
-	t_productId.id as "productId",
-	t_productId.myProductId as "longProductId",
-	t_titles.title,
-	t_mainimages.image_link_array as "images",
-	t_properties.property_array as "sizesColors",
-	t_pricelist.byname as "priceList_InNames",
-	t_pricelist.bynumber as "priceList_InNumbers",
-	t_pricelist.bydata  as "priceList_Data",
-	t_specs.specs as "specs",
-	t_shippingdetails.shipping as "shipping",
-	t_modifieddescription.description as "modified_description_content"
-	from shop.t_productId
-	join shop.t_basicInfo on t_basicInfo.foreign_id = t_productId.id
-	join shop.t_titles on t_titles.foreign_id = t_productId.id
-	join shop.t_mainimages on t_mainimages.foreign_id = t_productId.id
-	join shop.t_properties on t_properties.foreign_id = t_productId.id
-	join shop.t_pricelist on t_pricelist.foreign_id = t_productId.id
-	join shop.t_specs on t_specs.foreign_id = t_productId.id
-	join shop.t_shippingdetails on t_shippingdetails.foreign_id = t_productId.id
-	join shop.t_modifieddescription on t_modifieddescription.foreign_id = t_productId.id
-	where t_productId.myproductid = $1
-	;`, productId.Id).Scan(&data.Display,
+	err := queries.GetProductData.QueryRow(productId.Id).Scan(&data.Display,
 		&data.Link,
 		&data.MinPrice,
 		&data.MaxPrice,
@@ -216,7 +192,7 @@ func getProductData(c *gin.Context, db *sql.DB)  {
 	if err != nil {
 		// c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something wrong!"})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Something wrong!"})
 		return
 	}
 
@@ -231,7 +207,7 @@ func getProductData(c *gin.Context, db *sql.DB)  {
 	redis.SetKey(redisKeyName, buf.Bytes(), 20)
 
 
-	c.JSON(http.StatusOK, data)
+	c.AbortWithStatusJSON(http.StatusOK, data)
 }
 
 type signupPayload struct {
@@ -240,7 +216,7 @@ type signupPayload struct {
 	HashedPassword string
 }
 
-func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
+func signup(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 	// rate limiter
 	ip := c.ClientIP()
 	var currentRoute = "signup"
@@ -263,7 +239,7 @@ func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
 	}
 
 	var emailAlreadyExist sql.NullString
-	err := db.QueryRow(`SELECT email FROM shop.t_users WHERE email = $1`, signup.Email).Scan(&emailAlreadyExist)
+	err := queries.EmailAlreadyExist.QueryRow(signup.Email).Scan(&emailAlreadyExist)
 	if err != nil {
 		// handle error
 		// do not write "return" here
@@ -283,12 +259,37 @@ func signup(c *gin.Context, db *sql.DB, JWTSECRET string) {
 
 		signup.HashedPassword = string(hashedPassword)
 
-		var id int
-		err2 := db.QueryRow(`INSERT into shop.t_users(email, password) Values($1, $2) RETURNING id;`, signup.Email, signup.HashedPassword).Scan(&id)
-		if err2 != nil {
-			// do not write "return" here
-			fmt.Println(err.Error())
+		tx, err := queries.DB.Begin()
+		if err != nil {
+			fmt.Println("Error beginning transaction:", err)
+			tx.Rollback()
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{ "error": true, "success": false, "reason": "Something's wrong here" })
+			return
 		}
+
+		var id int
+		err2 := tx.Stmt(queries.SignUpUser).QueryRow(signup.Email, signup.HashedPassword).Scan(&id)
+		if err2 != nil {
+			fmt.Println(err2.Error())
+			tx.Rollback()
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{ "error": true, "success": false, "reason": "Could not sign up, Something's wrong." })
+			return
+		}
+		
+		_, err3 := tx.Stmt(queries.CreateDefaultWishlist).Exec(id, "Default")
+		if err3 != nil {
+			fmt.Println(err3.Error())
+			tx.Rollback()
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{ "error": true, "success": false, "reason": "Could not exec command, Something's wrong." })
+			return
+		}
+
+		err = tx.Commit()
+        if err != nil {
+            fmt.Println("Error committing transaction:", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{ "error": true, "success": false, "reason": "Something's wrong" })
+			return
+        }
 
 		// jwt
 		claims := jwt.MapClaims{"id": id}
@@ -322,7 +323,7 @@ type loginDB struct {
 	HashedPassword string `json:"password"`
 }
 
-func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
+func login(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 	// rate limiter
 	ip := c.ClientIP()
 	var currentRoute = "login"
@@ -345,7 +346,7 @@ func login(c *gin.Context, db *sql.DB, JWTSECRET string) {
 	}
 	
 	var loginDBData loginDB
-	err := db.QueryRow(`SELECT id, email, password from shop.t_users WHERE email = $1;`, login.Email).Scan(&loginDBData.Id, &loginDBData.Email, &loginDBData.HashedPassword)
+	err := queries.Login.QueryRow(login.Email).Scan(&loginDBData.Id, &loginDBData.Email, &loginDBData.HashedPassword)
 	if err != nil {
 		fmt.Println(err.Error())
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{ "error": true, "success": false, "reason": "Credentials Error 1" })
@@ -393,4 +394,162 @@ func logout(c *gin.Context)  {
 		myCookie.RemoveCookie(c, &cookieName)
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{"success": true})
 	}
+}
+
+type UserWishListNames struct {
+	WishListNames pgtype.JSON `json:"wishListNames"`
+	WishListIds pgtype.JSON `json:"wishListIds"`
+	WishListData map[string][]WishListData `json:"wishListData"`
+}
+
+type WishListData struct {
+    Title          string `json:"title"`
+    WishListId     int    `json:"wishListId"`
+    ParentWishList int    `json:"parentWishListId"`
+    SelectedImageUrl	string `json:"selectedImageUrl"`
+    ProductId      int    `json:"productId"`
+    LongProductId  int    `json:"longProductId"`
+    WishListName   string `json:"wishListName"`
+    MinPrice       float32    `json:"minPrice"`
+    MaxPrice       float32    `json:"maxPrice"`
+}
+
+func getWishlist(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
+	// rate limiter
+	ip := c.ClientIP()
+	var currentRoute = "getWishlist"
+	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
+	if currentRate >= 100 {
+		_err.AbortRequestWithError(c, http.StatusTooManyRequests, gin.H{"error": true, "code": "To many requests", "waitForSeconds": remainingTime}, true)
+		return
+	}
+	limiter.SetLimit(&ip, &currentRoute, currentRate + 1)
+
+	cookie, err := c.Cookie("token")
+	if err != nil {
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 3" }, true)
+		return
+	}
+
+	// fmt.Println(cookie)
+	// Create a new JWT token using the token string and the secret key
+	token, err := jwt.Parse(cookie, func(t *jwt.Token) (interface{}, error) {
+		return []byte(JWTSECRET), nil
+	})
+
+	if err != nil {
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 5" }, true)
+		return
+	}
+
+	// Check if the JWT token is valid
+	if !token.Valid {
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 7" }, true)
+		return
+	}
+	
+	// If the JWT token is valid, get the id from the claims
+	var idTemp float64
+	var id int
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 8" }, true)
+		return
+	}
+	// fmt.Println(claims)
+	idTemp, ok = claims["id"].(float64)
+	if !ok {
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 9" }, true)
+		return
+	}
+	
+	id = int(idTemp)
+	var userWishList UserWishListNames
+
+	// redis get
+	redisKeyName := "getWishlist-" + strconv.Itoa(id)
+	exist, val := redis.GetKey(redisKeyName)
+	if exist {
+		fmt.Println("From Redis")
+		dec := gob.NewDecoder(bytes.NewReader(val))
+		if err := dec.Decode(&userWishList); err != nil {
+			fmt.Println("Error decoding struct:", err)
+		} else {
+			redis.IncreaseExpirationTime(redisKeyName, 20) // increase 20 seconds again
+			c.AbortWithStatusJSON(http.StatusOK, userWishList)
+			return
+		}
+	}
+	// redis end
+
+	fmt.Println("From Database")
+	err2 := queries.GetUserAllWishListsNames.QueryRow(id).Scan(&userWishList.WishListNames, &userWishList.WishListIds)
+	if err2 != nil {
+		fmt.Println(err2.Error())
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 10" }, true)
+		return
+	}
+	
+    var wishListIdsData []int
+    err = json.Unmarshal(userWishList.WishListIds.Bytes, &wishListIdsData)
+    if err != nil {
+		fmt.Println(err.Error())
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 11" }, true)
+		return
+    }
+	
+	var wishListNamesData []string
+    err = json.Unmarshal(userWishList.WishListNames.Bytes, &wishListNamesData)
+    if err != nil {
+		fmt.Println(err.Error())
+		_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 12" }, true)
+		return
+    }
+
+	objData := make(map[string][]WishListData)
+	
+	for index, element := range wishListIdsData {
+		var arrData []WishListData
+		rows, err2 := queries.GetUserWishListData.Query(element, 5)
+
+		if err2 != nil {
+			fmt.Println(err2.Error())
+			_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 13" }, true)
+			return
+		}
+		
+		for rows.Next() {
+			var userWishListData WishListData
+			if err := rows.Scan(&userWishListData.Title, 
+				&userWishListData.WishListId,
+				&userWishListData.ParentWishList,
+				&userWishListData.SelectedImageUrl,
+				&userWishListData.ProductId,
+				&userWishListData.LongProductId,
+				&userWishListData.WishListName,
+				&userWishListData.MinPrice,
+				&userWishListData.MaxPrice); err != nil {
+				fmt.Println(err)
+				_err.AbortRequestWithError(c, http.StatusNotFound, gin.H{ "error": true, "code": "Error Code 14" }, true)
+				return
+			}
+			arrData = append(arrData, userWishListData)
+		}
+		if arrData != nil {
+			objData[wishListNamesData[index]] = arrData
+		}
+	}
+	userWishList.WishListData = objData
+
+	// redis set
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(userWishList); err != nil {
+		fmt.Println("Error encoding struct:", err)
+	}
+
+	redis.SetKey(redisKeyName, buf.Bytes(), 20)
+
+	c.AbortWithStatusJSON(http.StatusOK, userWishList)
+
 }

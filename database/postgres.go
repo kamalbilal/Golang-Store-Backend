@@ -27,6 +27,13 @@ func ConnectToDatabase() (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	// Set the maximum number of connections in the pool
+	db.SetMaxOpenConns(10)
+
+	// Set the maximum number of idle connections in the pool
+	db.SetMaxIdleConns(5)
 
 	return db, nil
 }
+
