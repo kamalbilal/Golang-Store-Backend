@@ -993,6 +993,7 @@ func addProductToWishList(c *gin.Context, JWTSECRET string, queries *_db.Queries
 
 	
 	if addProductToWishlistData.ProductId < 1 || addProductToWishlistData.CartId < 1 || addProductToWishlistData.WishListId < 1 || addProductToWishlistData.SelectedImageUrl == "" {
+		print.Str(addProductToWishlistData)
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Required field are empty"}, true)
 		return
 	}
@@ -1132,7 +1133,7 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	// If the JWT token is valid, get the id from the claims
 	var idTemp float64
 	var userId int
-	
+
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 8" }, true)
