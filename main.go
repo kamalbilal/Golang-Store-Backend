@@ -1132,6 +1132,7 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	// If the JWT token is valid, get the id from the claims
 	var idTemp float64
 	var userId int
+	
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 8" }, true)
@@ -1157,12 +1158,9 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	id := 0
 	err2 := tx.Stmt(queries.CheckProductExistInUserCart).QueryRow(addProductToCartData.CartName, userId).Scan(&id)
 	if err2 != nil {
-		print.Str(err2)
 		if err2 == sql.ErrNoRows {
 			id = 0
-			print.Str("snsknsk")
 		} else {
-			print.Str("error")
 			tx.Rollback()
 			_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 11" }, true)
 			return
@@ -1205,5 +1203,4 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": id  })
-
 }
