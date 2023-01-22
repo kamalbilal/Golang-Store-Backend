@@ -8,12 +8,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-09T00:04:23.463Z",
+    "modified": "2023-01-19T14:08:33.474Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"id\" : 7293620822086523\n}",
+      "raw": "{\n  \"id\" : 3256804589542025\n}",
       "form": []
     },
     "tests": []
@@ -27,12 +27,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-14T15:08:33.746Z",
+    "modified": "2023-01-19T16:21:24.243Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal55@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilal56@gmail.com\",\n  \"password\": \"Kamal\"\n}",
       "form": []
     },
     "tests": []
@@ -46,12 +46,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-14T15:35:49.256Z",
+    "modified": "2023-01-21T09:19:55.686Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal55@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilalhuawei@gmail.com\",\n  \"password\": \"kamal\"\n}",
       "form": []
     },
     "tests": []
@@ -76,6 +76,25 @@
     "tests": []
   },
   {
+    "_id": "5de3583c-623d-42be-9c2e-78f17984341f",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/addtocart",
+    "url": "http://localhost:8080/addtocart",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-22T19:40:24.449Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n    \"ProductId\": 1,\n    \"CartName\": \"1-14:350852\",\n    \"SelectedImageUrl\": \"https://ae01.alicdn.com/kf/S990aa6f19b3c4705bc64df5237e90b1e8/Classic-Retro-Square-Sunglasses-Women-Brand-Vintage-Travel-Small-Rectangle-Sun-Glasses-For-Female-Oculos-Lunette.jpg_640x640.jpg\",\n    \"Quantity\": 1,\n    \"Price\": 7.1,\n    \"ShippingPrice\": 2.71,\n    \"Discount\": 0,\n    \"SelectedProperties\": {\n        \"1\": {\n            \"propertyName\": \"Color\",\n            \"isSelected\": true,\n            \"selected\": \"16\",\n            \"Data\": \"14:350852;\"\n        }\n    },\n    \"ShippingDetails\": {\n        \"itemId\": 1005002459250960,\n        \"shipTo\": \"United States\",\n        \"company\": \"Cainiao Super Economy Global\",\n        \"display\": true,\n        \"currency\": \"USD\",\n        \"discount\": 0,\n        \"provider\": \"cainiao\",\n        \"shipFrom\": \"China\",\n        \"tracking\": \"invisible\",\n        \"utParams\": \"{\\\"cmd\\\":false,\\\"currency\\\":\\\"USD\\\",\\\"deliveryDate\\\":\\\"2023-03-12\\\",\\\"deliveryDayMax\\\":62,\\\"deliveryDayMin\\\":62,\\\"fAmount\\\":2.71,\\\"fCurrency\\\":\\\"USD\\\",\\\"itemId\\\":1005002459250960,\\\"preOrder\\\":false,\\\"productId\\\":1005002459250960,\\\"provider\\\":\\\"cainiao\\\",\\\"serviceName\\\":\\\"AE_CN_SUPER_ECONOMY_G\\\",\\\"shipFrom\\\":\\\"CN\\\",\\\"shipToCountry\\\":\\\"US\\\",\\\"shippingFee\\\":\\\"2.71\\\",\\\"traceId\\\":\\\"210312ee16732725735152107e4b3f\\\",\\\"trackingAvailable\\\":false}\",\n        \"itemScene\": \"default\",\n        \"patternId\": 202002,\n        \"etaTraceId\": \"ORDER-f-1-228-5356798000-5356798000-1678629371582-1678629371582-AE_CN_SUPER_ECONOMY_G-DOOR_DELIVERY-OPERATING-DEF|SELLER_STOCK_UP-CALENDAR_DAY---432000000-432000000---OPERATING-@DELIVERY_FULFIL-CALENDAR_DAY---4752000000-4752000000---OPERATING-3116,3117|1673272573582\",\n        \"shipToCode\": \"US\",\n        \"solutionId\": 792001,\n        \"shippingFee\": \"charge\",\n        \"deliveryDate\": \"Mar 12\",\n        \"leadTimeSort\": [\n            9999\n        ],\n        \"shipFromCode\": \"CN\",\n        \"displayAmount\": 2.71,\n        \"deliveryDayMax\": 62,\n        \"deliveryDayMin\": 62,\n        \"displayCurrency\": \"USD\",\n        \"existEtaMaxTime\": \"yes\",\n        \"formattedAmount\": \"$2.71\",\n        \"freightCommitDay\": \"75\",\n        \"itemShipFromType\": \"same\",\n        \"displayEtaMaxDate\": \"Mar 12\",\n        \"etaVersionSceneId\": 158,\n        \"deliveryOptionCode\": \"AE_CN_SUPER_ECONOMY_G\",\n        \"deliveryProviderCode\": \"AE_CN_SUPER_ECONOMY_G\",\n        \"deliveryProviderName\": \"Cainiao Super Economy Global\",\n        \"etaVersionStrategyId\": 61,\n        \"solutionBusinessType\": \"Default\",\n        \"etaVersionDisplayType\": \"deliveryDate\",\n        \"guaranteedDeliveryTime\": 60,\n        \"guaranteedDeliveryTimeProviderName\": \"cainiao_committed_time\",\n        \"index\": 0\n    }\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
     "_id": "93a7f495-6345-4403-a9b6-3e83c082d182",
     "colId": "history",
     "containerId": "",
@@ -92,6 +111,73 @@
       }
     ],
     "params": [],
+    "tests": []
+  },
+  {
+    "_id": "e2566183-0c17-4536-9b4a-fec8fcf82064",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:8080/getMoreWishlist",
+    "url": "http://localhost:8080/getMoreWishlist",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-14T01:57:16.785Z",
+    "modified": "2023-01-16T23:49:57.137Z",
+    "headers": [
+      {
+        "name": "token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjUzNjUsImlkIjo1fQ.4xVyYbXs4h1Yi7SK-RTX4Ibeof32OWgarniSSOM-vik"
+      }
+    ],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"pageNumber\" : 1,\n  \"wishlistId\" : 1,\n  \"wishlistName\" : \"kamal\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "9a82f45d-ad03-40f7-b638-1bf65200fe75",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:8080/getUserData",
+    "url": "http://localhost:8080/getUserData",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-14T01:57:16.785Z",
+    "modified": "2023-01-17T03:03:05.933Z",
+    "headers": [
+      {
+        "name": "token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjUzNjUsImlkIjo1fQ.4xVyYbXs4h1Yi7SK-RTX4Ibeof32OWgarniSSOM-vik"
+      }
+    ],
+    "params": [],
+    "tests": []
+  },
+  {
+    "_id": "f46b738c-cce1-4558-b0fd-28509b8e7849",
+    "colId": "history",
+    "containerId": "",
+    "name": "http://localhost:8080/removefromcart",
+    "url": "http://localhost:8080/removefromcart",
+    "method": "DELETE",
+    "sortNum": 0,
+    "created": "2023-01-14T01:57:16.785Z",
+    "modified": "2023-01-19T13:15:33.355Z",
+    "headers": [
+      {
+        "name": "token",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjUzNjUsImlkIjo1fQ.4xVyYbXs4h1Yi7SK-RTX4Ibeof32OWgarniSSOM-vik"
+      }
+    ],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"productId\" : 5,\n  \"cartId\" : 5\n}",
+      "form": []
+    },
     "tests": []
   }
 ]

@@ -17,8 +17,13 @@ type Queries struct {
 	SignUpUser *sql.Stmt
 	CreateDefaultWishlist *sql.Stmt
 	Login *sql.Stmt
-	GetUserAllWishListsNames *sql.Stmt
+	GetUserAllWishListsNamesIds *sql.Stmt
 	GetUserWishListData *sql.Stmt
+	GetUserCertainWishListData *sql.Stmt
+	GetUserData *sql.Stmt
+	GetUserCartData *sql.Stmt
+	DeleteProductFromCart *sql.Stmt
+	AddProductToWishlist *sql.Stmt
 }
 var queries Queries
 
@@ -78,7 +83,7 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.Login, err = db.Prepare("SELECT id, email, password from shop.t_users WHERE email = $1")
 	handleError(err)
 	
-	queries.GetUserAllWishListsNames, err = db.Prepare(`SELECT json_agg(wishlistname) as "wishListNjson_aggames", json_agg(id) as "wishListIds" from shop.t_wishList WHERE foreign_user_id = $1 GROUP BY foreign_user_id`)
+	queries.GetUserAllWishListsNamesIds, err = db.Prepare(`SELECT json_agg(wishlistname) as "wishListNjson_aggames", json_agg(id) as "wishListIds" from shop.t_wishList WHERE foreign_user_id = $1 GROUP BY foreign_user_id`)
 	handleError(err)
 	
 	queries.GetUserWishListData, err = db.Prepare(`
@@ -99,6 +104,67 @@ func GetProductDataQuery(db *sql.DB) *Queries {
     JOIN shop.t_basicinfo ON t_basicinfo.foreign_id = t_wishlist_products.foreign_product_id
     where t_wishlist_products.foreign_wishlist_id = $1 ORDER BY t_wishlist_products.created_at DESC LIMIT $2`)
 	handleError(err)
+	
+	queries.GetUserCertainWishListData, err = db.Prepare(`
+    SELECT     
+    t_titles.title,
+    t_wishlist_products.id as "wishListId",
+    t_wishlist_products.foreign_wishlist_id as "parentWishListId",
+    t_wishlist_products.selectedImageUrl as "selectedImageUrl",
+    t_wishlist_products.foreign_product_id as "productId",
+    t_productId.myProductId as "longProductId",
+    t_wishlist.wishlistname as "wishListName",
+    minprice as "minPrice",
+    maxprice as "maxPrice"
+    From shop.t_wishlist_products 
+    JOIN shop.t_wishlist ON t_wishlist.id = t_wishlist_products.foreign_wishlist_id
+    JOIN shop.t_productId ON t_productId.id = t_wishlist_products.foreign_product_id
+    JOIN shop.t_titles ON t_titles.foreign_id = t_wishlist_products.foreign_product_id
+    JOIN shop.t_basicinfo ON t_basicinfo.foreign_id = t_wishlist_products.foreign_product_id
+    where t_wishlist_products.foreign_user_id = $1 AND t_wishlist_products.foreign_wishlist_id = $2 ORDER BY t_wishlist_products.created_at DESC LIMIT $3 OFFSET $4;
+    `)
+	handleError(err)
+
+	queries.GetUserData, err = db.Prepare(`SELECT email from shop.t_users WHERE id = $1`)
+	handleError(err)
+	
+	queries.GetUserCartData, err = db.Prepare(`SELECT 
+    title,
+    t_cart.id as "cartId",
+    t_cart.foreign_product_id as "productId",
+    t_productId.myProductId as "longProductId",
+    cartname as "cartName",
+    selectedImageUrl as "selectedImageUrl",
+    price as "selectedPrice",
+    t_cart.quantity as "selectedQuantity",
+    t_cart.discount as "selectedDiscount",
+    selectedproperties as "selectedProperties",
+    shippingdetails as "selectedShippingDetails",
+    shippingprice as "selectedShippingPrice",
+    minprice as "minPrice",
+    maxprice as "maxPrice",
+    multiunitname as "multiUnitName",
+    oddunitname as "oddUnitName",
+    maxpurchaselimit as "maxPurchaseLimit",
+    buylimittext as "buyLimitText",
+    quantityavaliable as "quantityAvaliable",
+    byname as "priceList_InNames",
+    bynumber as "priceList_InNumbers",
+    bydata as "priceList_Data"
+    FROM shop.t_cart 
+    JOIN shop.t_productId ON t_productId.id = t_cart.foreign_product_id
+    JOIN shop.t_titles ON t_titles.foreign_id = t_cart.foreign_product_id
+    JOIN shop.t_basicinfo ON t_basicinfo.foreign_id = t_cart.foreign_product_id
+    JOIN shop.t_pricelist ON t_pricelist.foreign_id = t_cart.foreign_product_id
+    WHERE foreign_user_id = $1`)
+	handleError(err)
+
+	queries.DeleteProductFromCart, err = db.Prepare(`DELETE from shop.t_cart WHERE foreign_product_id = $1 and foreign_user_id = $2 and id = $3 RETURNING id;`)
+	handleError(err)
+	
+	queries.AddProductToWishlist, err = db.Prepare(`INSERT into shop.t_wishlist_products(foreign_user_id, foreign_product_id, foreign_wishlist_id, selectedImageUrl) Values($1, $2, $3, $4) ON CONFLICT (foreign_user_id, foreign_product_id) DO UPDATE SET foreign_wishlist_id = $5 RETURNING id;`)
+	handleError(err)
+	
 
 	return &queries
 }

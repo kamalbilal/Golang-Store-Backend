@@ -10,6 +10,7 @@ func SetCookie(c *gin.Context, token string) {
     expires := time.Now().Add(time.Hour * 240) // expires in 240 hours
 
     // Set the cookie with the given options.
+    // c.SetSameSite(http.SameSiteNoneMode)
     c.SetCookie("token", token, int(expires.Unix()), "/", "", false, true)
 }
 
