@@ -1092,7 +1092,7 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	ip := c.ClientIP()
 	var currentRoute = "addProductToCart"
 	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
-	if currentRate >= 20 {
+	if currentRate >= 10 {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusTooManyRequests,  gin.H{"error": true,"success": false, "code": "To many requests", "waitForSeconds": remainingTime}, true)
 		return
 	}
@@ -1105,11 +1105,6 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Params not found or are of invalid type"}, true)
 		return
 	}
-	
-	// if addProductToCartData.ProductId < 1 || addProductToCartData.CartName == "" || addProductToCartData.Price < 0 || addProductToCartData.ShippingPrice < 0  {
-	// 	_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Required field are empty"}, true)
-	// 	return
-	// }
 
 	cookie, err := c.Cookie("token")
 	if err != nil {
@@ -1151,5 +1146,64 @@ func addProductToCart(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 
 	userId = int(idTemp)
 
-	print.Str(userId)
+	tx, err := queries.DB.Begin()
+	if err != nil {
+		print.Str("Error beginning transaction: " , err)
+		tx.Rollback()
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 10" }, true)
+		return
+	}
+
+	id := 0
+	err2 := tx.Stmt(queries.CheckProductExistInUserCart).QueryRow(addProductToCartData.CartName, userId).Scan(&id)
+	if err2 != nil {
+		print.Str(err2)
+		if err2 == sql.ErrNoRows {
+			id = 0
+			print.Str("snsknsk")
+		} else {
+			print.Str("error")
+			tx.Rollback()
+			_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 11" }, true)
+			return
+		}
+	}
+
+	if id > 0 {
+		// product already exist so updating
+		_, err3 := tx.Stmt(queries.UpdateProductInCart).Exec(addProductToCartData.Quantity, addProductToCartData.Price, addProductToCartData.ShippingPrice, addProductToCartData.Discount, addProductToCartData.SelectedProperties, addProductToCartData.ShippingDetails, addProductToCartData.SelectedImageUrl, userId, addProductToCartData.ProductId, addProductToCartData.CartName)
+		if err3 != nil {
+			tx.Rollback()
+			_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 12" }, true)
+			return
+		}
+	} else {
+		// product does not exist so inserting
+		err3 := tx.Stmt(queries.AddProductInCart).QueryRow(addProductToCartData.ProductId, userId, addProductToCartData.CartName, addProductToCartData.Quantity, addProductToCartData.Price, addProductToCartData.ShippingPrice, addProductToCartData.Discount, addProductToCartData.SelectedProperties, addProductToCartData.ShippingDetails, addProductToCartData.SelectedImageUrl).Scan(&id)
+		if err3 != nil {
+			tx.Rollback()
+			_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 13" }, true)
+			return
+		}
+
+		// product inserted so incrementing count
+		_, err4 := tx.Stmt(queries.IncrementCartCount).Exec(userId)
+		if err4 != nil {
+			tx.Rollback()
+			_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 14" }, true)
+			return
+		}
+
+	}
+	
+
+	err = tx.Commit()
+	if err != nil {
+		print.Str("Error committing transaction: " , err)
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound, gin.H{ "error": true, "success": false, "reason": "Error Code 15" }, true)
+		return
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": id  })
+
 }

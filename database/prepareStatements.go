@@ -24,6 +24,11 @@ type Queries struct {
 	GetUserCartData *sql.Stmt
 	DeleteProductFromCart *sql.Stmt
 	AddProductToWishlist *sql.Stmt
+	CheckProductExistInUserCart *sql.Stmt
+	UpdateProductInCart *sql.Stmt
+	AddProductInCart *sql.Stmt
+	IncrementCartCount *sql.Stmt
+	
 }
 var queries Queries
 
@@ -121,8 +126,7 @@ func GetProductDataQuery(db *sql.DB) *Queries {
     JOIN shop.t_productId ON t_productId.id = t_wishlist_products.foreign_product_id
     JOIN shop.t_titles ON t_titles.foreign_id = t_wishlist_products.foreign_product_id
     JOIN shop.t_basicinfo ON t_basicinfo.foreign_id = t_wishlist_products.foreign_product_id
-    where t_wishlist_products.foreign_user_id = $1 AND t_wishlist_products.foreign_wishlist_id = $2 ORDER BY t_wishlist_products.created_at DESC LIMIT $3 OFFSET $4;
-    `)
+    where t_wishlist_products.foreign_user_id = $1 AND t_wishlist_products.foreign_wishlist_id = $2 ORDER BY t_wishlist_products.created_at DESC LIMIT $3 OFFSET $4`)
 	handleError(err)
 
 	queries.GetUserData, err = db.Prepare(`SELECT email from shop.t_users WHERE id = $1`)
@@ -159,10 +163,22 @@ func GetProductDataQuery(db *sql.DB) *Queries {
     WHERE foreign_user_id = $1`)
 	handleError(err)
 
-	queries.DeleteProductFromCart, err = db.Prepare(`DELETE from shop.t_cart WHERE foreign_product_id = $1 and foreign_user_id = $2 and id = $3 RETURNING id;`)
+	queries.DeleteProductFromCart, err = db.Prepare(`DELETE from shop.t_cart WHERE foreign_product_id = $1 and foreign_user_id = $2 and id = $3 RETURNING id`)
 	handleError(err)
 	
-	queries.AddProductToWishlist, err = db.Prepare(`INSERT into shop.t_wishlist_products(foreign_user_id, foreign_product_id, foreign_wishlist_id, selectedImageUrl) Values($1, $2, $3, $4) ON CONFLICT (foreign_user_id, foreign_product_id) DO UPDATE SET foreign_wishlist_id = $5 RETURNING id;`)
+	queries.AddProductToWishlist, err = db.Prepare(`INSERT into shop.t_wishlist_products(foreign_user_id, foreign_product_id, foreign_wishlist_id, selectedImageUrl) Values($1, $2, $3, $4) ON CONFLICT (foreign_user_id, foreign_product_id) DO UPDATE SET foreign_wishlist_id = $5 RETURNING id`)
+	handleError(err)
+	
+	queries.CheckProductExistInUserCart, err = db.Prepare(`SELECT id from shop.t_cart WHERE cartName = $1 and foreign_user_id = $2`)
+	handleError(err)
+	
+	queries.UpdateProductInCart, err = db.Prepare(`UPDATE shop.t_cart SET quantity = $1, price = $2, shippingPrice = $3, discount = $4, selectedProperties = $5, shippingDetails = $6, selectedImageUrl = $7 WHERE foreign_user_id = $8 and foreign_product_id = $9 and cartName = $10 RETURNING id`)
+	handleError(err)
+	
+	queries.AddProductInCart, err = db.Prepare(`INSERT into shop.t_cart(foreign_product_id, foreign_user_id, cartName, quantity, price, shippingPrice, discount, selectedProperties, shippingDetails, selectedImageUrl) Values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`)
+	handleError(err)
+	
+	queries.IncrementCartCount, err = db.Prepare(`UPDATE shop.t_users SET cartCount = cartCount + 1 WHERE id = $1`)
 	handleError(err)
 	
 
