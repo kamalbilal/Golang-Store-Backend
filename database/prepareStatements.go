@@ -166,7 +166,7 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.DeleteProductFromCart, err = db.Prepare(`DELETE from shop.t_cart WHERE foreign_product_id = $1 and foreign_user_id = $2 and id = $3 RETURNING id`)
 	handleError(err)
 	
-	queries.AddProductToWishlist, err = db.Prepare(`INSERT into shop.t_wishlist_products(foreign_user_id, foreign_product_id, foreign_wishlist_id, selectedImageUrl) Values($1, $2, $3, $4) ON CONFLICT (foreign_user_id, foreign_product_id) DO UPDATE SET foreign_wishlist_id = $5 RETURNING id`)
+	queries.AddProductToWishlist, err = db.Prepare(`INSERT into shop.t_wishlist_products(foreign_user_id, foreign_product_id, foreign_wishlist_id, selectedImageUrl) Values($1, $2, $3, $4) ON CONFLICT (foreign_user_id, foreign_product_id) DO UPDATE SET foreign_wishlist_id = $5, selectedImageUrl = $6, created_at = floor(extract(epoch from NOW())::integer) RETURNING id`)
 	handleError(err)
 	
 	queries.CheckProductExistInUserCart, err = db.Prepare(`SELECT id from shop.t_cart WHERE cartName = $1 and foreign_user_id = $2`)

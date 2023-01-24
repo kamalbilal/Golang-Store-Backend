@@ -991,7 +991,6 @@ func addProductToWishList(c *gin.Context, JWTSECRET string, queries *_db.Queries
 		return
 	}
 
-	
 	if addProductToWishlistData.ProductId < 1 || addProductToWishlistData.CartId < 1 || addProductToWishlistData.WishListId < 1 || addProductToWishlistData.SelectedImageUrl == "" {
 		print.Str(addProductToWishlistData)
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Required field are empty"}, true)
@@ -1050,7 +1049,7 @@ func addProductToWishList(c *gin.Context, JWTSECRET string, queries *_db.Queries
 		}
 
 		var id int
-		err2 := tx.Stmt(queries.AddProductToWishlist).QueryRow(userId, addProductToWishlistData.ProductId, addProductToWishlistData.WishListId, addProductToWishlistData.SelectedImageUrl, addProductToWishlistData.WishListId).Scan(&id)
+		err2 := tx.Stmt(queries.AddProductToWishlist).QueryRow(userId, addProductToWishlistData.ProductId, addProductToWishlistData.WishListId, addProductToWishlistData.SelectedImageUrl, addProductToWishlistData.WishListId, addProductToWishlistData.SelectedImageUrl).Scan(&id)
 		if err2 != nil {
 			print.Str(err2.Error())
 			tx.Rollback()
