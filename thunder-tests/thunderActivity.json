@@ -95,6 +95,25 @@
     "tests": []
   },
   {
+    "_id": "d61177a4-403f-4657-b940-be12c2836e1a",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/createNewList",
+    "url": "http://localhost:8080/createNewList",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-26T01:11:58.910Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"WishListName\": \"Kamal\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
     "_id": "93a7f495-6345-4403-a9b6-3e83c082d182",
     "colId": "history",
     "containerId": "",

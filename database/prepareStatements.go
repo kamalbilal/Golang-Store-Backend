@@ -28,6 +28,7 @@ type Queries struct {
 	UpdateProductInCart *sql.Stmt
 	AddProductInCart *sql.Stmt
 	IncrementCartCount *sql.Stmt
+	CreateNewListInWishList *sql.Stmt
 	
 }
 var queries Queries
@@ -179,6 +180,9 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	handleError(err)
 	
 	queries.IncrementCartCount, err = db.Prepare(`UPDATE shop.t_users SET cartCount = cartCount + 1 WHERE id = $1`)
+	handleError(err)
+	
+	queries.CreateNewListInWishList, err = db.Prepare(`INSERT into shop.t_wishlist(foreign_user_id, wishlistname) Values($1, $2) RETURNING id`)
 	handleError(err)
 	
 
