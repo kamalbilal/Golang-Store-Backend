@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -33,6 +34,8 @@ func ConnectToDatabase() (*sql.DB, error) {
 
 	// Set the maximum number of idle connections in the pool
 	db.SetMaxIdleConns(5)
+
+	db.SetConnMaxLifetime(time.Second * 30)
 
 	return db, nil
 }

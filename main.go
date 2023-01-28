@@ -578,6 +578,8 @@ func getWishlist(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 			}
 			arrData = append(arrData, userWishListData)
 		}
+		rows.Close()
+
 		if arrData != nil {
 			objData[wishListNamesData[index]] = arrData
 		}
@@ -717,6 +719,7 @@ func getCertainWishlist(c *gin.Context, JWTSECRET string, queries *_db.Queries) 
 		}
 		arrData = append(arrData, userWishListData)
 	}
+	rows.Close()
 
 	// redis set
 	jsonArrayData, err := json.Marshal(arrData)
@@ -831,7 +834,6 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 	
 	var userData UserData
 	data := make(map[string]interface{})
-	print.Str("hello")
 
 	err = queries.GetUserData.QueryRow(userId).Scan(&userData.Email)
 	if err != nil {
@@ -839,7 +841,6 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		return
 	}
 	data["userData"] = &userData
-	print.Str("first")
 
 	
 	rows, err := queries.GetUserCartData.Query(userId)
@@ -879,8 +880,8 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		}
 		arrData = append(arrData, userCart)
 	}
-	print.Str("second")
 
+	rows.Close()
 	
 	data["userCart"] = &arrData
 
@@ -891,7 +892,6 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 12" }, true)
 		return
 	}
-	print.Str("third")
 
 	data["userWishList"] = &userWishList
 
@@ -1376,11 +1376,12 @@ func updateWishListName(c *gin.Context, JWTSECRET string, queries *_db.Queries) 
 	userId = int(idTemp)
 	print.Str(userId)
 
-	_, err2 := queries.UpdateWishlistName.Query(updateWishListNamePayloadData.WishListName, userId, updateWishListNamePayloadData.WishListId)
+	rows, err2 := queries.UpdateWishlistName.Query(updateWishListNamePayloadData.WishListName, userId, updateWishListNamePayloadData.WishListId)
 	if err2 != nil {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 10" }, true)
 		return
 	}
+	rows.Close()
 
 	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": updateWishListNamePayloadData.WishListId  })
 }
