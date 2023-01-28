@@ -186,9 +186,8 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.CreateNewListInWishList, err = db.Prepare(`INSERT into shop.t_wishlist(foreign_user_id, wishlistname, created_at) Values($1, $2, floor(extract(epoch from now())::integer)) RETURNING id`)
 	handleError(err)
 	
-	queries.UpdateWishlistName, err = db.Prepare(`UPDATE shop.t_wishlist SET wishlistname = $1 WHERE foreign_user_id = $2 and id = $3`)
+	queries.UpdateWishlistName, err = db.Prepare(`UPDATE shop.t_wishlist SET wishlistname = $1 WHERE foreign_user_id = $2 and id = $3 and wishlistname = $4`)
 	handleError(err)
 	
-
 	return &queries
 }

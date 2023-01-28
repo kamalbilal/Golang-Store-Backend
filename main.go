@@ -789,7 +789,7 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		return
 	}
 	limiter.SetLimit(&ip, &currentRoute, currentRate + 1, 60)
-	print.Str("redis finished")
+	
 	cookie, err := c.Cookie("token")
 	if err != nil {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 3" }, true)
@@ -1298,6 +1298,7 @@ func createNewListInWishlist(c *gin.Context, JWTSECRET string, queries *_db.Quer
 type updateWishListNamePayload struct {
 	WishListId int `binding:"required"`
 	WishListName string `binding:"required" validate:"min=3,max=25"`
+	OldWishlistName string `binding:"required" validate:"min=3,max=25"`
 }
 
 func updateWishListName(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
@@ -1328,8 +1329,9 @@ func updateWishListName(c *gin.Context, JWTSECRET string, queries *_db.Queries) 
 	print.Str(len(updateWishListNamePayloadData.WishListName))
 
 	updateWishListNamePayloadData.WishListName = strings.ToUpper(string(updateWishListNamePayloadData.WishListName[0])) + updateWishListNamePayloadData.WishListName[1:]
+	updateWishListNamePayloadData.OldWishlistName = strings.ToUpper(string(updateWishListNamePayloadData.OldWishlistName[0])) + updateWishListNamePayloadData.OldWishlistName[1:]
 
-	if updateWishListNamePayloadData.WishListName == "Default" {
+	if updateWishListNamePayloadData.WishListName == "Default" || updateWishListNamePayloadData.OldWishlistName == "Default" {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Cannot change default value"}, true)
 		return
 	}
@@ -1376,7 +1378,7 @@ func updateWishListName(c *gin.Context, JWTSECRET string, queries *_db.Queries) 
 	userId = int(idTemp)
 	print.Str(userId)
 
-	rows, err2 := queries.UpdateWishlistName.Query(updateWishListNamePayloadData.WishListName, userId, updateWishListNamePayloadData.WishListId)
+	rows, err2 := queries.UpdateWishlistName.Query(updateWishListNamePayloadData.WishListName, userId, updateWishListNamePayloadData.WishListId, updateWishListNamePayloadData.OldWishlistName)
 	if err2 != nil {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 10" }, true)
 		return
