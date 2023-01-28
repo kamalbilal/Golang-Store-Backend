@@ -29,6 +29,7 @@ type Queries struct {
 	AddProductInCart *sql.Stmt
 	IncrementCartCount *sql.Stmt
 	CreateNewListInWishList *sql.Stmt
+	UpdateWishlistName *sql.Stmt
 	
 }
 var queries Queries
@@ -83,13 +84,13 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.SignUpUser, err = db.Prepare("INSERT into shop.t_users(email, password) Values($1, $2) RETURNING id")
 	handleError(err)
 	
-	queries.CreateDefaultWishlist, err = db.Prepare("INSERT into shop.t_wishlist(foreign_user_id, wishlistname) Values($1, $2)")
+	queries.CreateDefaultWishlist, err = db.Prepare("INSERT into shop.t_wishlist(foreign_user_id, wishlistname, created_at) Values($1, $2, floor(extract(epoch from now())::integer))")
 	handleError(err)
 	
 	queries.Login, err = db.Prepare("SELECT id, email, password from shop.t_users WHERE email = $1")
 	handleError(err)
 	
-	queries.GetUserAllWishListsNamesIds, err = db.Prepare(`SELECT json_agg(wishlistname) as "wishListNjson_aggames", json_agg(id) as "wishListIds" from shop.t_wishList WHERE foreign_user_id = $1 GROUP BY foreign_user_id`)
+	queries.GetUserAllWishListsNamesIds, err = db.Prepare(`SELECT json_agg(wishlistname) as "wishListNames", json_agg(id) as "wishListIds" from shop.t_wishList WHERE foreign_user_id = $1 GROUP BY foreign_user_id`)
 	handleError(err)
 	
 	queries.GetUserWishListData, err = db.Prepare(`
@@ -182,7 +183,10 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.IncrementCartCount, err = db.Prepare(`UPDATE shop.t_users SET cartCount = cartCount + 1 WHERE id = $1`)
 	handleError(err)
 	
-	queries.CreateNewListInWishList, err = db.Prepare(`INSERT into shop.t_wishlist(foreign_user_id, wishlistname) Values($1, $2) RETURNING id`)
+	queries.CreateNewListInWishList, err = db.Prepare(`INSERT into shop.t_wishlist(foreign_user_id, wishlistname, created_at) Values($1, $2, floor(extract(epoch from now())::integer)) RETURNING id`)
+	handleError(err)
+	
+	queries.UpdateWishlistName, err = db.Prepare(`UPDATE shop.t_wishlist SET wishlistname = $1 WHERE foreign_user_id = $2 and id = $3`)
 	handleError(err)
 	
 

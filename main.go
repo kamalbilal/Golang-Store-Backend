@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	_db "kamal/database"
@@ -27,6 +28,7 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/validator.v2"
 )
 
 func loadEnv(keyName string) string {
@@ -122,6 +124,9 @@ func setupRoutes(router *gin.Engine, db *sql.DB, queries *_db.Queries , useCors 
 	})
 	router.POST("/createNewList", func(c *gin.Context) {
 		createNewListInWishlist(c, JWTSECRET, queries)
+	})
+	router.POST("/updateWishListName", func(c *gin.Context) {
+		updateWishListName(c, JWTSECRET, queries)
 	})
 }
 
@@ -781,7 +786,7 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		return
 	}
 	limiter.SetLimit(&ip, &currentRoute, currentRate + 1, 60)
-
+	print.Str("redis finished")
 	cookie, err := c.Cookie("token")
 	if err != nil {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 3" }, true)
@@ -826,12 +831,16 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 	
 	var userData UserData
 	data := make(map[string]interface{})
+	print.Str("hello")
+
 	err = queries.GetUserData.QueryRow(userId).Scan(&userData.Email)
 	if err != nil {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 10" }, true)
 		return
 	}
 	data["userData"] = &userData
+	print.Str("first")
+
 	
 	rows, err := queries.GetUserCartData.Query(userId)
 	if err != nil {
@@ -870,6 +879,8 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		}
 		arrData = append(arrData, userCart)
 	}
+	print.Str("second")
+
 	
 	data["userCart"] = &arrData
 
@@ -880,6 +891,7 @@ func getUserData(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
 		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 12" }, true)
 		return
 	}
+	print.Str("third")
 
 	data["userWishList"] = &userWishList
 
@@ -1281,4 +1293,94 @@ func createNewListInWishlist(c *gin.Context, JWTSECRET string, queries *_db.Quer
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": id  })
+}
+
+type updateWishListNamePayload struct {
+	WishListId int `binding:"required"`
+	WishListName string `binding:"required" validate:"min=3,max=25"`
+}
+
+func updateWishListName(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
+	// rate limiter
+	ip := c.ClientIP()
+	var currentRoute = "updateWishListName"
+	currentRate, remainingTime := limiter.GetLimitRate(&ip, &currentRoute)
+	if currentRate >= 10 {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusTooManyRequests,  gin.H{"error": true,"success": false, "code": "To many requests", "waitForSeconds": remainingTime}, true)
+		return
+	}
+	limiter.SetLimit(&ip, &currentRoute, currentRate + 1, 60)
+
+	var updateWishListNamePayloadData updateWishListNamePayload
+
+	if err := c.ShouldBindWith(&updateWishListNamePayloadData, binding.JSON); err != nil {
+		print.Str(err)
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Params not found or are of invalid type"}, true)
+		return
+	}
+	
+	if err := validator.Validate(updateWishListNamePayloadData); err != nil {
+		// values not valid, deal with errors here
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Params not found or are of invalid type or are of invalid length"}, true)
+		return
+	}
+
+	print.Str(len(updateWishListNamePayloadData.WishListName))
+
+	updateWishListNamePayloadData.WishListName = strings.ToUpper(string(updateWishListNamePayloadData.WishListName[0])) + updateWishListNamePayloadData.WishListName[1:]
+
+	if updateWishListNamePayloadData.WishListName == "Default" {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{"error": true,"success": false, "code": "Cannot change default value"}, true)
+		return
+	}
+
+	cookie, err := c.Cookie("token")
+	if err != nil {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 3" }, true)
+		return
+	}
+
+	print.Str(cookie)
+
+	token, err := jwt.Parse(cookie, func(t *jwt.Token) (interface{}, error) {
+		return []byte(JWTSECRET), nil
+	})
+
+	if err != nil {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 5" }, true)
+		return
+	}
+
+	// Check if the JWT token is valid
+	if !token.Valid {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 7" }, true)
+		return
+	}
+
+	// If the JWT token is valid, get the id from the claims
+	var idTemp float64
+	var userId int
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 8" }, true)
+		return
+	}
+	// print.Str(claims)
+	idTemp, ok = claims["id"].(float64)
+	if !ok {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 9" }, true)
+		return
+	}
+
+	userId = int(idTemp)
+	print.Str(userId)
+
+	_, err2 := queries.UpdateWishlistName.Query(updateWishListNamePayloadData.WishListName, userId, updateWishListNamePayloadData.WishListId)
+	if err2 != nil {
+		_err.AbortRequestWithError(c, &currentRoute, http.StatusNotFound,  gin.H{ "error": true,"success": false, "code": "Error Code 10" }, true)
+		return
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": updateWishListNamePayloadData.WishListId  })
 }

@@ -27,12 +27,12 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-19T16:21:24.243Z",
+    "modified": "2023-01-28T01:10:30.568Z",
     "headers": [],
     "params": [],
     "body": {
       "type": "json",
-      "raw": "{\n  \"email\" : \"kamalbilal56@gmail.com\",\n  \"password\": \"Kamal\"\n}",
+      "raw": "{\n  \"email\" : \"kamalbilalhuawei@gmail.com\",\n  \"password\": \"kamal\"\n}",
       "form": []
     },
     "tests": []
@@ -46,7 +46,7 @@
     "method": "POST",
     "sortNum": 0,
     "created": "2023-01-07T22:58:12.548Z",
-    "modified": "2023-01-21T09:19:55.686Z",
+    "modified": "2023-01-28T01:10:35.226Z",
     "headers": [],
     "params": [],
     "body": {
@@ -109,6 +109,25 @@
     "body": {
       "type": "json",
       "raw": "{\n  \"WishListName\": \"Kamal\"\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
+    "_id": "2bba85a0-a299-4523-8ad8-edfffd8f1ea0",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/updateWishListName",
+    "url": "http://localhost:8080/updateWishListName",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-28T04:30:58.020Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"wishListId\": 2,\n  \"wishListName\": \"no kamal \"\n}",
       "form": []
     },
     "tests": []
