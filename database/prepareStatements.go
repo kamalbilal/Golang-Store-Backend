@@ -30,7 +30,7 @@ type Queries struct {
 	IncrementCartCount *sql.Stmt
 	CreateNewListInWishList *sql.Stmt
 	UpdateWishlistName *sql.Stmt
-	
+	DeleteWishlist *sql.Stmt
 }
 var queries Queries
 
@@ -187,6 +187,9 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	handleError(err)
 	
 	queries.UpdateWishlistName, err = db.Prepare(`UPDATE shop.t_wishlist SET wishlistname = $1 WHERE foreign_user_id = $2 and id = $3 and wishlistname = $4`)
+	handleError(err)
+	
+	queries.DeleteWishlist, err = db.Prepare(`DELETE FROM shop.t_wishlist WHERE foreign_user_id = $1 and id = $2`)
 	handleError(err)
 	
 	return &queries

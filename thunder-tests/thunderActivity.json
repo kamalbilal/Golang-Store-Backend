@@ -133,6 +133,25 @@
     "tests": []
   },
   {
+    "_id": "89bc823e-3fd4-4d07-9e40-0921a10543ea",
+    "colId": "history",
+    "containerId": "",
+    "name": "localhost:8080/deleteWishList",
+    "url": "http://localhost:8080/deleteWishList",
+    "method": "POST",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-01-29T03:18:59.827Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"wishListId\": 1\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
     "_id": "93a7f495-6345-4403-a9b6-3e83c082d182",
     "colId": "history",
     "containerId": "",
