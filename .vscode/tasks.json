@@ -8,6 +8,13 @@
             "problemMatcher": [],
             "isBackground": true
         },
+        {
+            "label": "Run Go main with nodemon",
+            "type": "shell",
+            "command": "nodemon --watch './**/*.go' --signal SIGTERM --exec 'go' run main.go",
+            "problemMatcher": [],
+            "isBackground": true
+        },
         // {
         //     "label": "Run Fastify Server",
         //     "type": "shell",
