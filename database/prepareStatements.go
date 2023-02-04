@@ -35,7 +35,7 @@ type Queries struct {
 var queries Queries
 
 
-func GetProductDataQuery(db *sql.DB) *Queries {
+func GetProductDataQuery(db *sql.DB) Queries {
 	var err error
 
 	queries.DB = db
@@ -192,5 +192,5 @@ func GetProductDataQuery(db *sql.DB) *Queries {
 	queries.DeleteWishlist, err = db.Prepare(`DELETE FROM shop.t_wishlist WHERE foreign_user_id = $1 and id = $2`)
 	handleError(err)
 	
-	return &queries
+	return queries
 }
