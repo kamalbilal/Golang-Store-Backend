@@ -152,6 +152,25 @@
     "tests": []
   },
   {
+    "_id": "a181a3cf-f105-43ed-ae72-25e49cfdf605",
+    "colId": "history",
+    "containerId": "",
+    "name": "test",
+    "url": "http://localhost:8080/get",
+    "method": "GET",
+    "sortNum": 0,
+    "created": "2023-01-07T22:58:12.548Z",
+    "modified": "2023-02-04T06:49:30.994Z",
+    "headers": [],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"wishListId\": 1\n}",
+      "form": []
+    },
+    "tests": []
+  },
+  {
     "_id": "93a7f495-6345-4403-a9b6-3e83c082d182",
     "colId": "history",
     "containerId": "",

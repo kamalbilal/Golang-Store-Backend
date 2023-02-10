@@ -12,8 +12,6 @@ import (
 	route "kamal/routes"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -65,7 +63,7 @@ func main() {
 
 
 func setupRoutes(router *gin.Engine, db *sql.DB, queries *_db.Queries , useCors bool) {
-	COOKIESIGNEDSECRET := loadEnv("COOKIESIGNEDSECRET")
+	// COOKIESIGNEDSECRET := loadEnv("COOKIESIGNEDSECRET")
 	JWTSECRET := loadEnv("JWTSECRET")
 
 	if useCors {
@@ -78,8 +76,9 @@ func setupRoutes(router *gin.Engine, db *sql.DB, queries *_db.Queries , useCors 
 		router.Use(cors.Default())
 	}
 
-	store := cookie.NewStore([]byte(COOKIESIGNEDSECRET))
-	router.Use(sessions.Sessions("mysession", store))
+	// store := cookie.NewStore([]byte(COOKIESIGNEDSECRET))
+	// router.Use(sessions.Sessions("mysession", store))
+
 	router.POST("/getProductData", func(c *gin.Context) {
 		route.GetProductData(c, queries)
 	})
@@ -118,6 +117,9 @@ func setupRoutes(router *gin.Engine, db *sql.DB, queries *_db.Queries , useCors 
 	})
 	router.POST("/deleteWishList", func(c *gin.Context) {
 		route.DeleteWishList(c, JWTSECRET, queries)
+	})
+	router.GET("/get", func(c *gin.Context) {
+		route.Test(c, JWTSECRET, queries)
 	})
 }
 

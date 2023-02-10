@@ -17,6 +17,7 @@ import (
 	_err "kamal/errors"
 	myCookie "kamal/setCookie"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/golang-jwt/jwt/v4"
@@ -1362,4 +1363,20 @@ func DeleteWishList(c *gin.Context, JWTSECRET string, queries *_db.Queries)  {
 	rows.Close()
 
 	c.AbortWithStatusJSON(http.StatusOK, gin.H{ "error": false, "success": true, "id": deleteWishListPayload.WishListId  })
+}
+
+func Test(c *gin.Context, JWTSECRET string, queries *_db.Queries) {
+	session := sessions.Default(c)
+	visits := session.Get("visits")
+	if visits == nil {
+		session.Set("visits", 0)
+	}else {
+		session.Set("visits", visits.(int)+1)
+	}
+	session.Save()
+
+	c.JSON(200, gin.H{
+		"message": "Hello, World!",
+		"visits": session.Get("visits"),
+	})
 }
